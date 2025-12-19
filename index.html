@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title> NHÓM 3 VIPPRO</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; }
+        #map { width: 100%; height: 100vh; }
+        
+        /* 1. HIỆU ỨNG NHẤP NHÁY CHO NÚT SỐ */
+        .aqi-marker {
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; color: white; font-weight: bold;
+            border: 2px solid white; font-size: 11px; width: 30px; height: 30px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.4);
+            /* Chuyển động nhịp thở 2 giây/lần */
+            animation: pulse-marker 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-marker {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); } /* Phóng to nhẹ */
+            100% { transform: scale(1); }
+        }
+
+        /* 2. HIỆU ỨNG NHẤP NHÁY CHO QUẦNG MỜ (Vòng tròn lớn) */
+        .pulse-circle {
+            /* Hiệu ứng mờ dần rồi đậm lên liên tục */
+            animation: pulse-ring 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-ring {
+            0% { fill-opacity: 0.1; }
+            50% { fill-opacity: 0.35; } /* Đậm lên */
+            100% { fill-opacity: 0.1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([16.0, 108.0], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        var danhSachAQI = [
+            { ten: "TP.Hà Nội", toaDo: [21.0285, 105.8542], chiSo: 244 },
+            { ten: "TP. Hồ Chí Minh", toaDo: [10.7626, 106.6601], chiSo: 84 },
+            { ten: "TP.Đà Nẵng", toaDo: [16.0544, 108.2022], chiSo: 63 },
+            { ten: "TP.Hải Phòng", toaDo: [20.8449, 106.6881], chiSo: 131 },
+            { ten: "TP.Huế", toaDo: [16.4637, 107.5908], chiSo: 58 },
+            { ten: "TP.Cần Thơ", toaDo: [10.0333, 105.7833], chiSo: 67 }
+        ];
+
+        function getColor(aqi) {
+            if (aqi > 200) return "#8c1aff"; // Tím
+            if (aqi > 150) return "#ff4d4d"; // Đỏ
+            if (aqi > 100) return "#f49633"; // Cam
+            if (aqi > 50)  return "#f3d64e"; // Vàng
+            return "#66bb6a";                // Xanh
+        }
+
+        danhSachAQI.forEach(function(tinh) {
+            var mauSac = getColor(tinh.chiSo);
+
+            // Vẽ vòng tròn quầng mờ có class 'pulse-circle' để nhấp nháy
+            L.circle(tinh.toaDo, {
+                radius: 20000,
+                color: mauSac,
+                fillOpacity: 0.2,
+                stroke: false,
+                className: 'pulse-circle' 
+            }).addTo(map);
+
+            var iconAQI = L.divIcon({
+                className: '',
+                html: `<div class="aqi-marker" style="background-color: ${mauSac}">${tinh.chiSo}</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            L.marker(tinh.toaDo, {icon: iconAQI}).addTo(map).bindPopup(tinh.ten + ": " + tinh.chiSo);
+        });
+    </script>
+</body>
+</html>
